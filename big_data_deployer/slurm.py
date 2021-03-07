@@ -6,6 +6,8 @@ import os
 import sys
 import time
 
+import pyslurm
+
 DEFAULT_NUM_MACHINES = 1
 DEFAULT_TIME = "0:15:00"
 DEFAULT_TIMEOUT = 1800
@@ -138,7 +140,7 @@ class SlurmManager:
         return self.__username
 
     def get_reservations(self):
-        list_output = util.execute_command_for_output(["squeue"])
+        list_output = util.execute_command_for_output(["squeue"]).split("\n")
         reservations = {}
         found_header = False
         for line in list_output.split('\n'):
@@ -159,23 +161,38 @@ class SlurmManager:
         if num_machines < 1:
             raise InvalidNumMachinesException("Number of machines must be at least one.")
 
-        # Invoke preserve to make the reservation
-        command = ["salloc", "-N", str(num_machines), "-t", time]
-        if partition is not None:
-            command.extend(["-p", partition])
-        reservation_output = util.execute_command_for_output(command)
+        epoch_now = int(time.time())
 
-        # Extract the reservation ID
-        reservation_id = None
-        for line in reservation_output.split('\n'):
-            if line.startswith("salloc:"):
-                reservation_id = line.split(" ")[-1]
-                break
-        if reservation_id is None:
-            raise ReservationFailedException(
-                "preserve did not print a reservation id. Output:\n%s" % reservation_output)
+        res = pyslurm.reservation()
+        res_dict = pyslurm.create_reservation_dict()
+        res_dict["node_cnt"] = 1
+        res_dict["users"] = os.environ['USER']
+        if partition:
+            res_dict["partition"] = partition
+        res_dict["start_time"] = epoch_now
+        res_dict["duration"] = time
+        res_dict["name"] = "res_test"
 
-        return int(reservation_id)
+        reservation_id = res.create(res_dict)
+        return reservation_id
+
+        # # Invoke preserve to make the reservation
+        # command = ["salloc", "-N", str(num_machines), "-t", time]
+        # if partition is not None:
+        #     command.extend(["-p", partition])
+        # reservation_output = util.execute_command_for_output(command)
+        #
+        # # Extract the reservation ID
+        # reservation_id = None
+        # for line in reservation_output.split('\n'):
+        #     if line.startswith("salloc:"):
+        #         reservation_id = line.split(" ")[-1]
+        #         break
+        # if reservation_id is None:
+        #     raise ReservationFailedException(
+        #         "preserve did not print a reservation id. Output:\n%s" % reservation_output)
+        #
+        # return int(reservation_id)
 
     def fetch_reservation(self, reservation_id):
         if reservation_id.upper() == "LAST":
@@ -249,8 +266,18 @@ def get_SlurmManager():
 
 
 def __create_reservation(args):
-    sm = get_SlurmManager()
-    reservation_id = sm.create_reservation(args.NUM_MACHINES, args.time, args.partition)
+    epoch_now = int(time.time())
+
+    res = pyslurm.reservation()
+    res_dict = pyslurm.create_reservation_dict()
+    res_dict["node_cnt"] = 1
+    res_dict["users"] = os.environ['USER']
+    res_dict["partition"] = args.partition
+    res_dict["start_time"] = epoch_now
+    res_dict["duration"] = args.time
+    res_dict["name"] = "res_test"
+
+    reservation_id = res.create(res_dict)
     if args.quiet:
         print(reservation_id)
     else:
@@ -319,5 +346,9 @@ def __wait_for_reservation(args):
 
 
 def __kill_reservation(args):
-    sm = get_SlurmManager()
-    sm.kill_reservation(args.RESERVATION_ID)
+    try:
+        pyslurm.reservation().delete(args.RESERVATION_ID)
+    except ValueError as value_error:
+        print("Reservation ({0}) delete failed - {1}".format(args.RESERVATION_ID, value_error.args[0]))
+    else:
+        print("Reservation {0} deleted".format(args.RESERVATION_ID))
