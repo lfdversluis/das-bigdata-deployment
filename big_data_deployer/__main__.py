@@ -2,7 +2,7 @@
 
 from __future__ import print_function
 from . import *
-from . import preserve
+from . import slurm
 import argparse
 import os.path
 import sys
@@ -18,7 +18,7 @@ def parse_arguments():
     add_list_frameworks_subparser(subparsers)
     add_install_subparser(subparsers)
     add_deploy_subparser(subparsers)
-    preserve.add_preserve_subparser(subparsers)
+    slurm.add_slurm_subparser(subparsers)
 
     return parser.parse_args()
 
@@ -72,7 +72,7 @@ def deploy_framework(args):
             print("No settings available")
     else:
         # Retrieve the set of machines assigned to the preserve reservation
-        reservation = preserve.get_PreserveManager().fetch_reservation(args.preserve_id)
+        reservation = slurm.get_SlurmManager().fetch_reservation(args.preserve_id)
         machines = reservation.assigned_machines
 
         # Parse settings
