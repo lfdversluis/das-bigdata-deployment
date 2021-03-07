@@ -84,7 +84,7 @@ class SparkFramework(Framework):
         # Clean up previous Spark deployments
         log_fn(1, "Creating a clean environment on the master and workers...")
         local_spark_dir = "/local/%s/spark/" % substitutions["__USER__"]
-        log_fn(2, "Purging \"%s\" on master..." % local_spark_dir)
+        log_fn(2, "Purging \"%s\" on master (%s)..." % (local_spark_dir, master))
         util.execute_command_quietly(["ssh", master, 'rm -rf "%s"' % local_spark_dir])
         log_fn(2, "Purging \"%s\" on workers..." % local_spark_dir)
         for worker in workers:

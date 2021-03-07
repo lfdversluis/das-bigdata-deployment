@@ -112,7 +112,7 @@ class HadoopFramework(Framework):
         log_fn(2, "Purging \"%s\" on workers..." % local_hadoop_dir)
         for worker in workers:
             util.execute_command_quietly(['ssh', worker, 'rm -rf "%s"' % local_hadoop_dir])
-        log_fn(2, "Creating directory structure on master...")
+        log_fn(2, "Creating directory structure on master ({})...".format(master))
         util.execute_command_quietly(['ssh', master, 'mkdir -p "%s"' % local_hadoop_dir])
         log_fn(2, "Creating directory structure on workers...")
         for worker in workers:
