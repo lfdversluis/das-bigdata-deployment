@@ -91,7 +91,7 @@ class SparkFramework(Framework):
             util.execute_command_quietly(['ssh', worker, 'rm -rf "%s"' % local_spark_dir])
         log_fn(2, "Creating directory structure on master...")
         util.execute_command_quietly(['ssh', master, 'mkdir -p "%s"' % local_spark_dir])
-        log_fn(2, "setting permissiong on directory structure on master...")
+        log_fn(2, "setting permissions on directory structure on master...")
         util.execute_command_quietly(['ssh', master, 'chmod 0770 "%s"' % local_spark_dir])
         log_fn(2, "Creating directory structure and setting permission on workers...")
         for worker in workers:
