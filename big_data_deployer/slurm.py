@@ -250,7 +250,7 @@ def get_SlurmManager():
 
 def __create_reservation(args):
     sm = get_SlurmManager()
-    reservation_id = sm.create_reservation(args.NUM_MACHINES, args.time)
+    reservation_id = sm.create_reservation(args.NUM_MACHINES, args.time, args.partition)
     if args.quiet:
         print(reservation_id)
     else:
